@@ -4,10 +4,7 @@ import subprocess
 
 
 def process_single_mkv(
-    file,
-    folder_path,
-    output_folder_path,
-    specified_audio=None,
+    file, folder_path, output_folder_path, specified_sub=None, specified_audio=None
 ):
     """處理單一 MKV 檔案，移除內嵌字幕並合併外部字幕"""
     base_name = os.path.splitext(os.path.basename(file))[0]
@@ -48,7 +45,10 @@ def process_single_mkv(
     ]
 
     # 字幕處理，若無 sup ass srt 則移除所有字幕
-    if sub_path:
+    if specified_sub == "all":
+        print(f"{file}，指定保留全部字幕")
+        cmd.extend(["-map", "0:s", "-c:s", "copy"])
+    elif specified_sub == "sub_file":
         subtitle_codec = (
             "dvdsub"
             if sub_path.endswith(".sup")
@@ -83,7 +83,7 @@ def process_single_mkv(
             "language=chi",  # 設定字幕語言（chi = 繁體中文）
         ]
     else:
-        print("無 sup ass srt 字幕，移除所有字幕")
+        print(f"{file}，沒有指定字幕，移除所有字幕")
 
     # 音訊處理，若無指定則保留全部音訊
     if specified_audio:
@@ -136,7 +136,12 @@ def process_single_mkv(
         print(f"❌ 處理失敗: {file}\n錯誤訊息: {result.stderr}")
 
 
-def process_media(folder_path, specified_audio=None, max_threads=5):
+def process_media(
+    folder_path,
+    specified_sub=None,
+    specified_audio=None,
+    max_threads=5,
+):
     output_folder_path = folder_path + "_output"
     os.makedirs(output_folder_path, exist_ok=True)
     mkv_files_list = glob.glob(os.path.join(folder_path, "*.mkv"))
@@ -146,5 +151,6 @@ def process_media(folder_path, specified_audio=None, max_threads=5):
             file=mkv_file,
             folder_path=folder_path,
             output_folder_path=output_folder_path,
+            specified_sub=specified_sub,
             specified_audio=specified_audio,
         )
