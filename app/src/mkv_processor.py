@@ -1,12 +1,25 @@
-import os
 import glob
+import os
 import subprocess
 
 
 def process_single_mkv(
-    file, folder_path, output_folder_path, specified_sub=None, specified_audio=None
+    file: str,
+    folder_path: str,
+    output_folder_path: str,
+    specified_sub: str = None,
+    specified_audio: str = None,
 ):
-    """處理單一 MKV 檔案，移除內嵌字幕並合併外部字幕"""
+    """
+    處理單一 MKV 檔案，移除內嵌字幕並合併外部字幕
+
+    Args:
+        file (str)
+        folder_path (str)
+        output_folder_path (str)
+        specified_sub (str, optional):指定保留字幕，all=保留全部字幕 sub_file=指定使用字幕檔案
+        specified_audio (str, optional): 指定音訊
+    """
     base_name = os.path.splitext(os.path.basename(file))[0]
     output_path = os.path.join(output_folder_path, os.path.basename(file))
 
@@ -87,7 +100,7 @@ def process_single_mkv(
 
     # 音訊處理，若無指定則保留全部音訊
     if specified_audio:
-        ## 取得所有音訊軌道語言資訊
+        # 取得所有音訊軌道語言資訊
         cmd_probe = [
             "ffprobe",
             "-i",
@@ -124,9 +137,14 @@ def process_single_mkv(
         print(f"{file}，沒有指定音訊，保留全部音訊")
         cmd.extend(["-map", "0:a", "-c:a", "copy"])
 
-    # 執行 ffmpeg 並捕捉錯誤輸出
+    # 執行 ffmpeg 並取得錯誤輸出
     cmd.append(output_path)
-    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
 
     if result.returncode == 0:
 
@@ -137,10 +155,9 @@ def process_single_mkv(
 
 
 def process_media(
-    folder_path,
-    specified_sub=None,
-    specified_audio=None,
-    max_threads=5,
+    folder_path: str,
+    specified_sub: str = None,
+    specified_audio: str = None,
 ):
     output_folder_path = folder_path + "_output"
     os.makedirs(output_folder_path, exist_ok=True)
